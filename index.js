@@ -245,11 +245,12 @@ class Userlist{
 var allusers = new Userlist([]);
 var bling = new Sprite(0,0,48,"grey")
 bling.randomize(xsize, ysize, 3);//This function randomizes location and velocity.
-var level1 = [new Bouncetangle(384,112,256,32), new Bouncetangle(384,592,256,32)];
+var level1 = [new Bouncetangle(384,112,256,32), new Bouncetangle(384,592,256,32)];//this isnt really used here.
 var level2 = [new Bouncetangle(192,256,32,256), new Bouncetangle(800,256,32,256)];
 var level3 = [new Bouncetangle(384,112,256,32), new Bouncetangle(384,592,256,32), new Bouncetangle(192,256,32,256), new Bouncetangle(800,256,32,256)]
-var currentlevel = 0;//Not yet used
+var currentlevel = 2;
 var bts = level2; //bts contains all the bouncetangles in use, 
+var currentattract = 0;
 var ats = []; //ats contains all the attractors in use
 //[new Attractor(128,128,16,1024),new Attractor(1024-128,768-128,16,-1024)];
 //var ats = [new Attractor(192,192,16,1000)];
@@ -307,7 +308,8 @@ function update() { //game loop
     if (allusers.users[i].s.vx>maxspeed){allusers.users[i].s.vx = maxspeed;}//speed limits
     if (allusers.users[i].s.vy>maxspeed){allusers.users[i].s.vy = maxspeed;}
 //match size to score
-    allusers.users[i].s.s=allusers.users[i].score;
+if (allusers.users[i].score>1){ allusers.users[i].s.s=allusers.users[i].score; }
+else {allusers.users[i].s.s=2;}
     //bomb explosion stuff
     if(allusers.users[i].bs.c=="orange"){//If bomb is in explosion state
       if (allusers.users[i].bs.s==80){//If bomb is in stage 1 of explosion...
@@ -336,7 +338,22 @@ function update() { //game loop
         allusers.users[i].bs.c="orange";
       }
     }else if (allusers.users[i].input==11){//level change
-      //change bouncetangles
+      currentlevel++;
+      if (currentlevel>3){
+        currentlevel = 0;
+        bts = [];
+      }
+      else if (currentlevel==1){ bts = [new Bouncetangle(384,112,256,32), new Bouncetangle(384,592,256,32)]; }
+      else if (currentlevel==2){ bts = [new Bouncetangle(192,256,32,256), new Bouncetangle(800,256,32,256)]; }
+      else if (currentlevel==3){ bts = [new Bouncetangle(384,112,256,32), new Bouncetangle(384,592,256,32), new Bouncetangle(192,256,32,256), new Bouncetangle(800,256,32,256)]; } 
+      var btsupdate = [];//Array to tell client where the bouncetangles are
+      var j = 0;
+      while(j<bts.length){
+        btsupdate.push([bts[j].minx, bts[j].miny, bts[j].sx, bts[j].sy, bts[j].c]);
+        j++;
+      }    
+      io.emit('levelbts', btsupdate);
+      console.log("trytochangelevel");
     }else if (allusers.users[i].input==12){
       //change attractors
     }else if (allusers.users[i].input==13){

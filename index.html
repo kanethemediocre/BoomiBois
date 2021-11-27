@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Boomi Bois MP by Andrew Kane</title>
+    <style>
+      body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+
+      #form { background: rgba(0, 0, 0, 0.15); padding: 0.25rem; position: fixed; bottom: 0; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; backdrop-filter: blur(10px); }
+      #nameform { background: rgba(0, 0, 0, 0.15); padding: 0.25rem; position: fixed; bottom: 2; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; backdrop-filter: blur(10px); }
+      
+      #input { border: none; padding: 0 1rem; flex-grow: 1; border-radius: 2rem; margin: 0.25rem; }
+      #nameinput { border: none; padding: 0 1rem; flex-grow: 1; border-radius: 2rem; margin: 0.25rem; }
+      
+      #input:focus { outline: none; }
+      #form > button { background: #333; border: none; padding: 0 1rem; margin: 0.25rem; border-radius: 3px; outline: none; color: #fff; }
+
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages > li { padding: 0.5rem 1rem; }
+      #messages > li:nth-child(odd) { background: #efefef; }
+    </style>
+  </head>
+  <body>
+    <canvas id="gameCanvas" width="1024" height="768"></canvas>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var time = 0;
+        var socket = io();
+        var updateplayerarray = [];
+        var updatebombarray = [];
+        var updatescorearray = [];
+        var updateblingarray = [];
+        var updatebtsarray = [];
+        var updateatsarray = [];
+        var mycolor = "grey";
+        function rainbowize(n){
+          var rainbow = ["red","orange","yellow","green","blue","purple"];
+          var m = n % rainbow.length;
+          return rainbow[m];
+        }
+        socket.on('whoami', function(whatsmyname) {
+          mycolor = whatsmyname;
+        });
+        socket.on('levelbts', function(newbts) {
+          updatebtsarray = newbts;
+        });
+        socket.on('levelats', function(newats) {
+          updateatsarray = newats;
+        });
+        socket.on('gameupdate', function(freshxyc) {
+          updateplayerarray = freshxyc[0];
+          updatebombarray = freshxyc[1];
+          updateblingarray = freshxyc[2]
+          //updatescorearray = freshxyc[2];
+          //updateblingarray = freshxyc[3];
+          updatetime = time;
+        });
+const FPS = 30;
+var canvas, context; 
+var score = 0;
+var bonustime = 0; //Timer (in frames) used to describe time left in bonus
+var bonustype = 0; //Tracks bonus state, 0 is no bonus
+canvas = document.getElementById("gameCanvas");      // load canvas
+  context = canvas.getContext("2d");
+  setInterval(update, 1000 / FPS);    		// set up interval (game loop)
+
+  function update() { //game loop
+    context.fillStyle = "black"; //background
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = "teal"; //"safe zone" for spawning.  But also a hideout.
+    context.fillRect(canvas.width/2-100, canvas.height/2-100, 200, 200);
+    context.fillStyle = "black";
+    context.font = "32px Arial";
+    context.fillText("SAFE ZONE",canvas.width/2-88,canvas.height/2-64);
+    context.fillStyle = "yellow";
+    context.fillText("DANGER ZONE",canvas.width/2-108,canvas.height/2-128);
+    context.fillStyle = mycolor;
+    context.fillText("You are "+mycolor,canvas.width/2-108,64);
+    var i=0;
+    while(i<updateplayerarray.length){
+      var dt = time-updatetime;
+      context.fillStyle = "red"; 
+      context.fillRect(500, 8, dt*32,8);//lag frame meter
+      var px = updateplayerarray[i][0]+dt*updateplayerarray[i][2];//player vx
+      var py = updateplayerarray[i][1]+dt*updateplayerarray[i][3];//player vy
+      var ps = updateplayerarray[i][5]
+      context.fillStyle = updateplayerarray[i][4]; //color of player
+      context.fillRect(px-ps/2, py-ps/2, ps, ps);
+      var bx = updatebombarray[i][0]+dt*updatebombarray[i][2];//bomb x.  Player and bomb arrays should be same length
+      var by = updatebombarray[i][1]+dt*updatebombarray[i][3];;//bomb y
+      var bs = updatebombarray[i][5];//bomb size
+      context.fillStyle = updateplayerarray[i][4]; //color of player applied to bomb
+      context.fillRect(bx-bs/2, by-bs/2, bs, bs);// size can change
+      if (updatebombarray[i][4]!=="orange"){//if bomb not exploded...
+        //context.fillStyle = updateplayerarray[i][4]; //color of player applied to bomb
+        //context.fillRect(bx-bs/2, by-bs/2, bs, bs);// size can change
+        context.fillStyle = "magenta"; //color of player applied to bomb
+        context.fillRect(bx-0.8*bs/2, by-0.8*bs/2, 0.8*bs, 0.8*bs);// size can change
+      }else{
+      context.fillStyle = "red";///color of bomb explosion
+      context.fillRect(bx-0.9*bs/2, by-0.9*bs/2, 0.9*bs, 0.9*bs);// size can change
+      context.fillStyle = "orange";
+      context.fillRect(bx-0.75*bs/2, by-0.75*bs/2, 0.75*bs, 0.75*bs);
+      context.fillStyle = "yellow";
+      context.fillRect(bx-0.4*bs/2, by-0.4*bs/2, 0.4*bs, 0.4*bs);
+      //context.fillStyle = "green";
+      //context.fillRect(bx-0.5*bs/2, by-0.5*bs/2, 0.5*bs, 0.5*bs);
+      //context.fillStyle = "blue";
+      //context.fillRect(bx-0.375*bs/2, by-0.375*bs/2, 0.375*bs, 0.375*bs);
+      //context.fillStyle = "purple";
+      //context.fillRect(bx-0.25*bs/2, by-0.25*bs/2, 0.25*bs, 0.25*bs);
+      }
+      context.fillStyle = updateplayerarray[i][4]; 
+      context.fillRect(0, 32+16*i, updateplayerarray[i][5], 12);//score
+      //console.log(updatescorearray);
+      i++;
+    }
+    var blx = updateblingarray[0][0];//bomb x.  Player and bomb arrays should be same length
+    var bly = updateblingarray[0][1];//bomb y
+    var bls = 48;
+    context.fillStyle = "yellow";
+    context.fillRect(blx-bls/2, bly-bls/2, bls, bls);// size can change
+    context.fillStyle = rainbowize(Math.floor(time/4));
+    context.fillRect(blx-0.75*bls/2, bly-0.75*bls/2, 0.75*bls, 0.75*bls);// size can change
+
+    //now draw level bouncetangles
+    var i=0;
+    while(i<updatebtsarray.length){
+      context.fillStyle = "dimgrey";//updatebtsarray[i][4];
+      context.fillRect(updatebtsarray[i][0], updatebtsarray[i][1], updatebtsarray[i][2], updatebtsarray[i][3]);// size can change 
+      context.fillStyle = "grey";//updatebtsarray[i][4];
+      context.fillRect(updatebtsarray[i][0]+2, updatebtsarray[i][1]+2, updatebtsarray[i][2]-4, updatebtsarray[i][3]-4);// size can change 
+
+      i++;
+    }
+    //now draw level attractors
+    var i=0;
+    while(i<updateatsarray.length){
+      var atx = updateatsarray[i][0];
+      var aty = updateatsarray[i][1];
+      var atsize = updateatsarray[i][2];
+      context.fillStyle = rainbowize(Math.floor(time/2));
+      context.fillRect(atx-atsize/2, aty-atsize/2, atsize, atsize);
+      context.fillStyle = rainbowize(Math.floor(time/2)+1);
+      context.fillRect(atx-atsize/2+2, aty-atsize/2+2, atsize-4, atsize-4);// size can change 
+      context.fillStyle = rainbowize(Math.floor(time/2)+2);
+      context.fillRect(atx-atsize/2+4, aty-atsize/2+4, atsize-8, atsize-8);// size can change 
+      i++;
+    }   
+    time++;
+  }
+window.addEventListener("keydown", function (event) {
+  if (event.defaultPrevented) {
+    return; // Do nothing if the event was already processed
+  }
+
+switch (event.key) {  //movement keys change velocity
+  case "ArrowDown":
+  socket.emit('gameinput', 0);
+    break;
+  case "ArrowUp":
+  socket.emit('gameinput',1);
+    break;
+  case "ArrowLeft":
+  socket.emit('gameinput',3);
+    break;
+  case "ArrowRight": 
+  socket.emit('gameinput',2);
+    break;
+  case "z": 
+    break;
+  case " ": // spacebar drops bomb
+  socket.emit('gameinput',4);
+    break;
+  case "1": 
+    socket.emit('gameinput',11);
+    break;
+  case "2": 
+    socket.emit('gameinput',12);
+    break;
+  case "3": 
+   socket.emit('gameinput',13);
+    break;
+  case "4": 
+   socket.emit('gameinput',14);
+    break;
+  default:
+  return; // Quit when this doesn't handle the key event.
+}
+event.preventDefault();// Cancel the default action to avoid it being handled twice
+}, true);
+</script>
+<br>
+Tap (do not hold) arrow keys to move, hit spacebar to release or detonate bombs.
+<br>
+Hit the bling or your opponent with an explosion to score.
+<br>
+You cannot be hit by an explosion, or hit others, while in the safe zone.
+<br>
+Your score is represented by the colored bar at the top left.
+<br>
+Also, don't get too close to the attractors/repulsors.
+  </body>
+</html>

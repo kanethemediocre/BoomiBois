@@ -1,3 +1,3 @@
 # BoomiBoisLocal
-Latest version the runs locally.
-There's a line "server.listen...." with an ip address that needs to be set to the local network server ip.
+Latest version can run on your local network or webserver
+There's a line "server.listen...." with an ip address that needs to be set to the local network server ip, or the ip of the server.

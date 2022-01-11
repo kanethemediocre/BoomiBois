@@ -10,7 +10,7 @@ const http = require('http');
 const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
-const playercolors = ["red","darkred","green","aqua","navy","blue","purple","deeppink","brown","darkgreen","indigo","lime","white"];
+const playercolors = ["red","darkred","green","aqua","navy","blue","purple","deeppink","orange","darkgreen","indigo","lime"];
 const xsize = 1024;
 const ysize = 768;
 const safex = 200; //size not location.
@@ -272,7 +272,11 @@ io.on('connection', (socket) => { //Player input
 io.on('connection', (socket) => { //Fresh connection and disconnection
     var theid = socket.id;
     var newuser = new User("Cactus Fantastico",theid);//Setting name, not really used
-    var randomplayercolor = playercolors[Math.floor(Math.random()*playercolors.length)];
+    var colori = Math.floor(Math.random()*playercolors.length);
+    var randomplayercolor = playercolors[colori];
+    console.log(playercolors.length);
+    playercolors.splice(colori,1);
+    console.log(playercolors.length);
     allusers.users.push(newuser);
     allusers.setcolor(randomplayercolor,theid);
     io.to(theid).emit('whoami', randomplayercolor);//tell client what color they are

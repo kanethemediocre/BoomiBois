@@ -16,6 +16,9 @@ const ysize = 768;
 const safex = 200; //size not location.
 const safey = 200;
 var maxspeed = 10;
+var time = 0;
+var time2 = 0;
+
 
 class Sprite {
   constructor(xxx, yyy, sss, ccc) {
@@ -243,12 +246,14 @@ class Userlist{
   }
 }
 var allusers = new Userlist([]);
-var bling = new Sprite(0,0,48,"grey")
+var bling = new Sprite(0,0,48,"grey");
+var bonus = new Sprite(-100,-100,24,"tan");//Color shouldn't actually be used, so I picked an ugly color to make it obvious if theres a problem.
 bling.randomize(xsize, ysize, 3);//This function randomizes location and velocity.
 var level1 = [new Bouncetangle(384,112,256,32), new Bouncetangle(384,592,256,32)];//this isnt really used here.
 var level2 = [new Bouncetangle(192,256,32,256), new Bouncetangle(800,256,32,256)];
 var level3 = [new Bouncetangle(384,112,256,32), new Bouncetangle(384,592,256,32), new Bouncetangle(192,256,32,256), new Bouncetangle(800,256,32,256)]
 var currentlevel = 2;
+
 var bts = level2; //bts contains all the bouncetangles in use, 
 var currentattract = 0;
 var ats = []; //ats contains all the attractors in use
@@ -292,13 +297,51 @@ io.on('connection', (socket) => { //Fresh connection and disconnection
         allusers.users.splice(allusers.getindex(theid), 1);//remove defunct users here
      });
 });
-const FPS = 30;
+
+var mytime = Date.now();
+const FPS = 60;
 setInterval(update, 1000 / FPS);    		// set up interval (game loop)
-function update() { //game loop
+
+/*
+var tickLengthMs = 1000 / 60;//60fps
+var previousTick = Date.now()// timestamp of each loop
+var actualTicks = 0// number of times gameLoop gets called
+var gameLoop = function () {
+  var now = Date.now()
+  actualTicks++
+  if (previousTick + tickLengthMs <= now) {
+    var delta = (now - previousTick) / 1000
+    previousTick = now
+    update(delta)
+    if (time%60==0){
+      console.log('delta', delta, '(target: ' + tickLengthMs +' ms)', 'node ticks', actualTicks);
+      console.log(time/60);
+    }
+
+    actualTicks = 0
+  }
+  if (Date.now() - previousTick < tickLengthMs - 16) {
+    setTimeout(gameLoop)
+  } else {
+    setImmediate(gameLoop)
+  }
+}*/
+
+function update(){
+  time++;
+ // if(time%2==0){
+ //   var truetime = Date.now();
+ //   var servertime = mytime+Math.floor(time*1000/FPS);
+ //   if (time%FPS==0){console.log("True time: "+truetime+"Server time: "+servertime+"dt: "+(truetime-servertime));}
+ //   if (servertime<truetime){update();}
+  //  }
+  //if (time%FPS==0){console.log("True time: "+truetime+"Server time: "+servertime+"dt: "+(truetime-servertime));}
+
   var updateplayerarray = [];
   var updatebombarray = [];
   var updatescorearray = [];
   var updateblingarray = [];
+  var updatebonusarray = [];
   var i=0;
   while(i<allusers.users.length){//For all players...
     if (allusers.users[i].s.x<0){//Resurrect dead players
@@ -355,7 +398,38 @@ else {allusers.users[i].s.s=2;}
       io.emit('levelbts', btsupdate);
       console.log("trytochangelevel");
     }else if (allusers.users[i].input==12){
-      //change attractors
+      //console.log("detected 2 press");
+      if (currentattract == 1){
+        currentattract = 0;
+        ats = [];
+      }else if (currentattract == 0){
+        currentattract = 1;
+        var numattract = Math.floor(Math.random()*3+1)
+        console.log(numattract);
+        var xmaxdist = xsize/2 - 10;
+        var xmindist = 128;
+        var ymaxdist = ysize/2-10;
+        var j=0;
+        while(j<numattract){
+          var xdistance = Math.floor(xmindist+Math.random()*(xmaxdist-xmindist))
+          var xdir = Math.floor(Math.random()*2)*2-1; //+ or - 1
+          var ax = xdistance*xdir+xsize/2;
+          var ydistance = Math.floor(ymaxdist*Math.random());
+          var ydir = Math.floor(Math.random()*2)*2-1; //+ or - 1
+          var ay = ydistance*ydir+ysize/2;
+          var adir = Math.floor(Math.random()*2)*2-1; //+ or - 1
+          ats.push(new Attractor(ax,ay,16,1024*adir));
+          j++
+        }
+      }
+      var atsupdate = [];//Array to tell client where the bouncetangles are
+      var j = 0;
+      while(j<ats.length){
+        atsupdate.push([ats[j].x,ats[j].y,ats[j].s]);
+        j++;
+      }    
+      io.emit('levelats', atsupdate);
+      console.log("trytochangelevelattractors"); 
     }else if (allusers.users[i].input==13){
       //change maxspeed
     }else if (allusers.users[i].input==13){
@@ -399,7 +473,10 @@ else {allusers.users[i].s.s=2;}
     while (j<bts.length){
       bts[j].bounce(allusers.users[i].s);
       bts[j].bounce(allusers.users[i].bs);
-      if (i==0){bts[j].bounce(bling);} //i==0 forces this to only execute once per loop per j,
+      if (i==0){
+        bts[j].bounce(bling);
+        bts[j].bounce(bonus);
+      } //i==0 forces this to only execute once per loop per j, so I dont need a bts loop outside the allusers.users loop.
       j++;
     }
     //attractors
@@ -423,8 +500,21 @@ else {allusers.users[i].s.s=2;}
     updatescorearray.push([allusers.users[i].score,allusers.users[i].s.c]);//score and color
     i++;
   }
-  bling.boundarybounce(xsize,ysize);
+  bling.boundarybounce(xsize,ysize);//bling stuff only handled once, not for every player
   bling.update1();
-  updateblingarray.push([bling.x,bling.y]);//score and color
-  io.emit('gameupdate', [updateplayerarray,updatebombarray,updateblingarray]);
+  if (time%(60*60)==0){bonus.randomize(xsize,ysize,1);}
+  bonus.boundarybounce(xsize,ysize);
+  bonus.update1();
+  updateblingarray.push([bling.x,bling.y,bling.vx,bling.vy]);
+  updatebonusarray.push([bonus.x,bonus.y,bonus.vx,bonus.vy]);
+  if (time%2==0){ io.emit('gameupdate', [updateplayerarray,updatebombarray,updateblingarray,updatebonusarray]); }
+  time2++;
+  //if (time%60==0){console.log(time+" "+time2);}
+  if(time%2==0){
+    var truetime = Date.now();
+    var servertime = mytime+Math.floor(time*1000/FPS);
+    if (time%FPS==0){console.log("True time: "+truetime+"Server time: "+servertime+"dt: "+(truetime-servertime));}
+    if (servertime<truetime){update();}
+    }
 }
+

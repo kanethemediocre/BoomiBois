@@ -332,7 +332,6 @@ var gameLoop = function () {
 }*/
 
 function update(){
-  time++;
  // if(time%2==0){
  //   var truetime = Date.now();
  //   var servertime = mytime+Math.floor(time*1000/FPS);
@@ -343,6 +342,7 @@ function update(){
   var truetime = Date.now();
   var servertime = mytime+Math.floor(time*1000/FPS);
   if (servertime<truetime){
+    time++;
   var updateplayerarray = [];
   var updatebombarray = [];
   var updatescorearray = [];

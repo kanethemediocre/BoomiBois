@@ -340,7 +340,9 @@ function update(){
  //   if (servertime<truetime){update();}
   //  }
   //if (time%FPS==0){console.log("True time: "+truetime+"Server time: "+servertime+"dt: "+(truetime-servertime));}
-
+  var truetime = Date.now();
+  var servertime = mytime+Math.floor(time*1000/FPS);
+  if (servertime<truetime){
   var updateplayerarray = [];
   var updatebombarray = [];
   var updatescorearray = [];
@@ -518,7 +520,12 @@ else {allusers.users[i].s.s=2;}
     var truetime = Date.now();
     var servertime = mytime+Math.floor(time*1000/FPS);
     if (time%FPS==0){console.log("True time: "+truetime+"Server time: "+servertime+"dt: "+(truetime-servertime));}
-    if (servertime<truetime){update();}
+    if ((servertime+1000/FPS)<truetime){
+      update();
+      console.log("Running extra frame because server is behind "+(truetime-servertime)+" ms");
+      }
     }
+  }else{console.log("Update loop skipped because server is ahead "+(servertime-truetime)+"ms");}
+  
 }
 

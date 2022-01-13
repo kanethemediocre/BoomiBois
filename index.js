@@ -262,7 +262,8 @@ var ats = []; //ats contains all the attractors in use
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
-server.listen(3000,'192.168.4.60');//server ip goes here--relocated
+server.listen(3000,'192.168.4.60');//this is my local ip, yours may vary
+//server.listen(3000,'172.31.39.8');//this is my server ip, yours may vary--"private" ip goes here, but browse to "public" ip to play.
 io.on('connection', (socket) => { //Player input
   socket.on('gameinput', (input) => {
     var theid = socket.id;
@@ -342,7 +343,7 @@ function update(){
   var truetime = Date.now();
   var servertime = mytime+Math.floor(time*1000/FPS);
   if (servertime<truetime){
-    time++;
+  time++;
   var updateplayerarray = [];
   var updatebombarray = [];
   var updatescorearray = [];
@@ -386,7 +387,7 @@ else {allusers.users[i].s.s=2;}
         allusers.users[i].bs.s=80;//This enlarges (explodes) bomb
         allusers.users[i].bs.c="orange";
       }
-    }else if (allusers.users[i].input==11){//level change
+    }else if ((allusers.users[i].input==11)&&(i==0)){//level change can be done by player 0.  Shouldn't really be in this loop but i was keeping all the player input here.
       currentlevel++;
       if (currentlevel>3){
         currentlevel = 0;
@@ -403,7 +404,7 @@ else {allusers.users[i].s.s=2;}
       }    
       io.emit('levelbts', btsupdate);
       console.log("trytochangelevel");
-    }else if (allusers.users[i].input==12){
+    }else if ((allusers.users[i].input==12)&&(i==0)){//attractor change can be done by player 0.  Shouldn't really be in this loop but i was keeping all the player input here.
       //console.log("detected 2 press");
       if (currentattract == 1){
         currentattract = 0;
@@ -488,8 +489,8 @@ else {allusers.users[i].s.s=2;}
     //attractors
     var j=0;
     while(j<ats.length){
-      ats[j].attract(allusers.users[i].s);//motion
-      ats[j].attract(allusers.users[i].bs);//motion (bomb)
+      ats[j].attract(allusers.users[i].s);//pull players
+      if (allusers.users[i].bs.x>0){ ats[j].attract(allusers.users[i].bs); }//pull bombs if in play
       if (allusers.users[i].s.collide(ats[j])){ //kill on collision
         allusers.users[i].s.kill();
         allusers.users[i].score=allusers.users[i].score-2;

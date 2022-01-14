@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Boomi Bois v35 by Andrew Kane</title>
+    <title>Boomi Bois v36 by Andrew Kane</title>
     <style>
       body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 
@@ -103,6 +103,29 @@ function update() { //game loop
         var bx = updatebombarray[i][0]+dt*updatebombarray[i][2];//bomb x.  Player and bomb arrays should be same length
         var by = updatebombarray[i][1]+dt*updatebombarray[i][3];;//bomb y
         var bs = updatebombarray[i][5];//bomb size
+        var dtbombcycle = 0;//This increments bomb size in parallel with index.js
+        while (dtbombcycle<dt){
+          if(updatebombarray[i][4]=="orange"){//If bomb is in explosion state
+            if (bs==80){//If bomb is in stage 1 of explosion...
+              bs=120;//make boom even bigger
+            }else if(bs==120){
+              bs=144;
+            }else if(bs==144){
+              bs=128;
+            }
+          }
+          dtbombcycle++;
+        }
+
+
+
+
+
+
+
+
+
+
         context.fillStyle = updateplayerarray[i][4]; //color of player applied to bomb
         context.fillRect(bx-bs/2, by-bs/2, bs, bs);// size can change
         if (updatebombarray[i][4]!=="orange"){//if bomb not exploded...

@@ -362,12 +362,18 @@ if (allusers.users[i].score>1){ allusers.users[i].s.s=allusers.users[i].score; }
 else {allusers.users[i].s.s=2;}
     //bomb explosion stuff
     if(allusers.users[i].bs.c=="orange"){//If bomb is in explosion state
-      if (allusers.users[i].bs.s==80){//If bomb is in stage 1 of explosion...
-        allusers.users[i].bs.s=120;//make boom even bigger
-      }else if(allusers.users[i].bs.s==120){
+      if (allusers.users[i].bs.s==50){//If bomb is in stage 1 of explosion...
+        allusers.users[i].bs.s=84;//make boom even bigger
+      }else if(allusers.users[i].bs.s==84){
+        allusers.users[i].bs.s=108;
+      }else if(allusers.users[i].bs.s==108){
+        allusers.users[i].bs.s=128;
+      }else if(allusers.users[i].bs.s==128){
         allusers.users[i].bs.s=144;
       }else if(allusers.users[i].bs.s==144){
-        allusers.users[i].bs.s=128;
+        allusers.users[i].bs.s=120
+      }else if(allusers.users[i].bs.s==120){
+        allusers.users[i].bs.s=96
       }else{//otherwise, (if the bomb is in stage 2)
         allusers.users[i].bs.s=20; //reset bomb size
         allusers.users[i].bs.c="magenta";//and color
@@ -384,7 +390,7 @@ else {allusers.users[i].s.s=2;}
       if (allusers.users[i].bs.x<0){
         allusers.users[i].bs.match(allusers.users[i].s);
       }else {
-        allusers.users[i].bs.s=80;//This enlarges (explodes) bomb
+        allusers.users[i].bs.s=50;//This enlarges (explodes) bomb
         allusers.users[i].bs.c="orange";
       }
     }else if ((allusers.users[i].input==11)&&(i==0)){//level change can be done by player 0.  Shouldn't really be in this loop but i was keeping all the player input here.

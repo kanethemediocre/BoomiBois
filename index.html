@@ -22,47 +22,71 @@
   <body>
     <canvas id="gameCanvas" width="1024" height="768"></canvas>
     <script src="/socket.io/socket.io.js"></script>
-    <script>
-        var time = 0;
-        var time2 = 0;
-        var socket = io();
-        var updateplayerarray = [];
-        var updatebombarray = [];
-        var updatescorearray = [];
-        var updateblingarray = [];
-        var updatebonusarray = [];
-        var updatebtsarray = [];
-        var updateatsarray = [];
-        var mycolor = "grey";
-        //var bonus = [-100,-100,0,0,0];//x,y,vx,vy,type
-        function rainbowize(n){
-          var rainbow = ["red","orange","yellow","green","blue","purple"];
-          var m = n % rainbow.length;
-          return rainbow[m];
+<script>
+    var time = 0;
+    var time2 = 0;
+    var socket = io();
+    var updateplayerarray = [];
+    var updatebombarray = [];
+    var updatescorearray = [];
+    var updateblingarray = [];
+    var updatebonusarray = [];
+    var updatebtsarray = [];
+    var updateatsarray = [];
+    var mycolor = "grey";
+    //var bonus = [-100,-100,0,0,0];//x,y,vx,vy,type
+    class Keybutton{
+      constructor(x,y,xsize,ysize,momentary,output){
+        this.x=x;
+        this.y=y;
+        this.sx=xsize;
+        this.sy=ysize;
+        this.mom=momentary;//treated as always true for now.
+        this.out=output; //Returned as output if virtual button is pressed.
         }
-        socket.on('whoami', function(whatsmyname) {
-          mycolor = whatsmyname;
-        });
-        socket.on('levelbts', function(newbts) {
-          updatebtsarray = newbts;
-        });
-        socket.on('levelats', function(newats) {
-          updateatsarray = newats;
-        });
-        socket.on('gameupdate', function(freshxyc) {
-         //console.log(updateplayerarray);
-         //console.log(lastcoords);
-          updateplayerarray = freshxyc[0];
-          //console.log(updateplayerarray);
-         // var dx =updateplayerarray[0][0]-oldp1x;
-         // console.log("dx= "+dx);
-          updatebombarray = freshxyc[1];
-          updateblingarray = freshxyc[2];
-          updatebonusarray = freshxyc[3];
-          //updatescorearray = freshxyc[2];
-          //updateblingarray = freshxyc[3];
-          updatetime = time;
-        });
+      draw(thecolor){
+        context.strokeStyle = thecolor;
+        context.beginPath()
+        context.rect(this.x,this.y,this.sx,this.sy);
+        context.stroke();
+        console.log("itriedtodraw");
+      }
+      check(xx,yy){
+        var theoutput = -1;
+        if ((xx>this.x)&&(xx<this.x+this.sx)&&(yy>this.y)&&(yy<this.y+this.sy)){
+          theoutput=this.out
+          }
+        return theoutput;
+        }
+      }
+     function rainbowize(n){
+      var rainbow = ["red","orange","yellow","green","blue","purple"];
+      var m = n % rainbow.length;
+      return rainbow[m];
+    }
+    socket.on('whoami', function(whatsmyname) {
+      mycolor = whatsmyname;
+    });
+    socket.on('levelbts', function(newbts) {
+      updatebtsarray = newbts;
+    });
+    socket.on('levelats', function(newats) {
+      updateatsarray = newats;
+    });
+    socket.on('gameupdate', function(freshxyc) {
+      //console.log(updateplayerarray);
+      //console.log(lastcoords);
+      updateplayerarray = freshxyc[0];
+      //console.log(updateplayerarray);
+      // var dx =updateplayerarray[0][0]-oldp1x;
+      // console.log("dx= "+dx);
+      updatebombarray = freshxyc[1];
+      updateblingarray = freshxyc[2];
+      updatebonusarray = freshxyc[3];
+      //updatescorearray = freshxyc[2];
+      //updateblingarray = freshxyc[3];
+      updatetime = time;
+    });
 //const FPS = 60;
 var canvas, context; 
 var lastcoords = [0,0];
@@ -71,6 +95,10 @@ var bonustime = 0; //Timer (in frames) used to describe time left in bonus
 var bonustype = 0; //Tracks bonus state, 0 is no bonus
 canvas = document.getElementById("gameCanvas");      // load canvas
 context = canvas.getContext("2d");
+var mkx = canvas.width-200;
+var mky = canvas.height-200;
+var mobilekeypad = true;
+var mobilekeys = [new Keybutton(mkx,mky,80,80,true,4),new Keybutton(mkx-100,mky,80,80,true,3),new Keybutton(mkx+100,mky,80,80,true,2),new Keybutton(mkx,mky-100,80,80,true,1),new Keybutton(mkx,mky+100,80,80,true,0)];
 var mytime = Date.now();
 const FPS = 60;
 setInterval(update, 1000 / FPS);    		// set up interval (game loop)
@@ -106,26 +134,22 @@ function update() { //game loop
         var dtbombcycle = 0;//This increments bomb size in parallel with index.js
         while (dtbombcycle<dt){
           if(updatebombarray[i][4]=="orange"){//If bomb is in explosion state
-            if (bs==80){//If bomb is in stage 1 of explosion...
-              bs=120;//make boom even bigger
-            }else if(bs==120){
+            if (bs==50){//If bomb is in stage 1 of explosion...
+              bs=84;//make boom even bigger
+            }else if(bs==84){
+              bs=108;
+            }else if(bs==108){
+              bs=128;
+            }else if(bs==128){
               bs=144;
             }else if(bs==144){
-              bs=128;
+              bs=120;
+            }else if(bs==120){
+              bs=96
             }
           }
           dtbombcycle++;
         }
-
-
-
-
-
-
-
-
-
-
         context.fillStyle = updateplayerarray[i][4]; //color of player applied to bomb
         context.fillRect(bx-bs/2, by-bs/2, bs, bs);// size can change
         if (updatebombarray[i][4]!=="orange"){//if bomb not exploded...
@@ -193,6 +217,13 @@ function update() { //game loop
         i++;
       }   
       time++;
+      //draw mobile keys
+    var i=0;
+    while((i<mobilekeys.length)&&(mobilekeypad)){
+      mobilekeys[i].draw("blue");
+      i++;
+    }
+
     //}
     //if(time%4==0){
     //  var truetime = Date.now();
@@ -204,6 +235,20 @@ function update() { //game loop
     console.log(updateplayerarray[0][1]+dt*updateplayerarray[0][3]);//player y+vy*dt)
   }
 //update();
+document.addEventListener("mousedown", mouseDownHandler, false);
+function mouseDownHandler(e) {
+  //var mdx =  e.clientX - canvas.width/2;
+	//var mdy =  e.clientY - canvas.height/2;
+  var i=0;
+  while((i<mobilekeys.length)&&(mobilekeypad)){
+    var maybeoutput = -1;
+    maybeoutput = mobilekeys[i].check(e.clientX,e.clientY);
+    if (maybeoutput>=0){
+      socket.emit('gameinput', maybeoutput);} 
+    i++;
+    }
+  }
+
 window.addEventListener("keydown", function (event) {
   if (event.defaultPrevented) {
     return; // Do nothing if the event was already processed
@@ -222,7 +267,8 @@ switch (event.key) {  //movement keys change velocity
   case "ArrowRight": 
   socket.emit('gameinput',2);
     break;
-  case "z": 
+  case "m": 
+  mobilekeypad = !mobilekeypad;
     break;
   case " ": // spacebar drops bomb
   socket.emit('gameinput',4);
@@ -246,7 +292,9 @@ event.preventDefault();// Cancel the default action to avoid it being handled tw
 }, true);
 </script>
 <br>
-Tap (do not hold) arrow keys to move, hit spacebar to release or detonate bombs.
+With keyboard, tap (do not hold) arrow keys to move, hit spacebar to release or detonate bombs.  M key will hide mobile support keypad.
+<br>
+On mobile devices, the mobile support keypad is in the lower right.  The middle button is your spacebar (for bomb), the others are your arrow keys.
 <br>
 Hit the bling or your opponent with an explosion to score.
 <br>

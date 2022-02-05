@@ -273,11 +273,15 @@ io.on('connection', (socket) => { //Player input
 io.on('connection', (socket) => { //Fresh connection and disconnection
     var theid = socket.id;
     var newuser = new User("Cactus Fantastico",theid);//Setting name, not really used
-    var colori = Math.floor(Math.random()*playercolors.length);
-    var randomplayercolor = playercolors[colori];
-    console.log(playercolors.length);
-    playercolors.splice(colori,1);
-    console.log(playercolors.length);
+    if (playercolors.length>0){
+      var colori = Math.floor(Math.random()*playercolors.length);
+      var randomplayercolor = playercolors[colori];
+      console.log(playercolors.length);
+      playercolors.splice(colori,1);
+      console.log(playercolors.length);
+    }else{
+      var randomplayercolor = "darkslategrey"
+    }
     allusers.users.push(newuser);
     allusers.setcolor(randomplayercolor,theid);
     io.to(theid).emit('whoami', randomplayercolor);//tell client what color they are
@@ -299,6 +303,12 @@ io.on('connection', (socket) => { //Fresh connection and disconnection
     allusers.users[allusers.users.length-1].s.y = ysize/2+Math.floor(Math.random()*9)-4;
     console.log(allusers);
     socket.on('disconnect', () => {
+        var theid = socket.id; 
+        var index = allusers.getindex(theid); 
+        var pcolor = allusers.users[index].s.c;
+        if (pcolor!="darkslategrey"){
+          playercolors.push(allusers.users[index].s.c);
+        }
         allusers.users.splice(allusers.getindex(theid), 1);//remove defunct users here
      });
 });

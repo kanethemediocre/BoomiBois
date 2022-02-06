@@ -93,6 +93,21 @@ class Sprite {
       return true;
     } else {return false;}
   }
+  boundarywrap(xmax, ymax){ //Bounces off walls of rectangle from 0,0 to xmax, ymax
+    if ((this.x < 0)&&(this.vx<0)){// || (this.x > xmax-this.s/2)){
+      this.x = xmax;
+      return true;
+    }else if ((this.x > xmax)&&(this.vx>0)){
+      this.x = 0;
+      return true;
+    }else if ((this.y < 0)&&(this.vy<0)){// || (this.y > ymax-this.s/2)){
+      this.y = ymax
+      return true;
+    }else if ((this.y > ymax)&&(this.vy>0)){
+      this.y = 0;
+      return true;
+    } else {return false;}
+  }
   boundarykill(xmax, ymax){ //Bounces off walls of rectangle from 0,0 to xmax, ymax
     if ((this.x < this.s/2) || (this.x > xmax-this.s/2)){
     this.kill();			//X wall collision for sprite
@@ -253,6 +268,8 @@ var level1 = [new Bouncetangle(384,112,256,32), new Bouncetangle(384,592,256,32)
 var level2 = [new Bouncetangle(192,256,32,256), new Bouncetangle(800,256,32,256)];
 var level3 = [new Bouncetangle(384,112,256,32), new Bouncetangle(384,592,256,32), new Bouncetangle(192,256,32,256), new Bouncetangle(800,256,32,256)]
 var currentlevel = 2;
+var boundarymode = 0;
+
 
 var bts = level2; //bts contains all the bouncetangles in use, 
 var currentattract = 0;
@@ -361,9 +378,9 @@ function update(){
   var updatebonusarray = [];
   var i=0;
   while(i<allusers.users.length){//For all players...
-    if (allusers.users[i].s.x<0){//Resurrect dead players
-      allusers.users[i].s.x = xsize/2;
-      allusers.users[i].s.y = ysize/2;
+    if (allusers.users[i].s.x<-50){//Resurrect dead players
+      allusers.users[i].s.x = xsize/2+Math.floor(Math.random()*9)-4;
+      allusers.users[i].s.y = ysize/2+Math.floor(Math.random()*9)-4;
     }
     if (allusers.users[i].s.vx>maxspeed){allusers.users[i].s.vx = maxspeed;}//speed limits
     if (allusers.users[i].s.vy>maxspeed){allusers.users[i].s.vy = maxspeed;}
@@ -453,8 +470,10 @@ else {allusers.users[i].s.s=2;}
       }    
       io.emit('levelats', atsupdate);
       console.log("trytochangelevelattractors"); 
-    }else if (allusers.users[i].input==13){
-      //change maxspeed
+    }else if ((allusers.users[i].input==13)&&(i==0)){
+      boundarymode++;
+      if (boundarymode>1){boundarymode = 0;}
+      //change boundary mode
     }else if (allusers.users[i].input==13){
       //change maxspeed
     }
@@ -488,10 +507,18 @@ else {allusers.users[i].s.s=2;}
       } 
     //bouncing stuff
     allusers.users[i].input = -1;//reset input to null value (0 is down arrow)
-    allusers.users[i].s.boundarybounce(xsize, ysize);//Bounces off walls of rectangle
-    if (allusers.users[i].bs.x>0){//only boundarybounce bombs if in bounds--inactive bombs stored oob
-      allusers.users[i].bs.boundarybounce(xsize, ysize);//Bounces off walls of rectangle
-    }
+    if (boundarymode==0){
+      allusers.users[i].s.boundarybounce(xsize, ysize);//Bounces off walls of rectangle
+      if (allusers.users[i].bs.x>0){//only boundarybounce bombs if in bounds--inactive bombs stored oob
+        allusers.users[i].bs.boundarybounce(xsize, ysize);//Bounces off walls of rectangle
+       }
+      }
+    else if (boundarymode==1){
+      allusers.users[i].s.boundarywrap(xsize, ysize);//Bounces off walls of rectangle
+      if (allusers.users[i].bs.x>-50){//only boundarybounce bombs if in bounds--inactive bombs stored oob
+        allusers.users[i].bs.boundarywrap(xsize, ysize);//Bounces off walls of rectangle
+       }
+      }
     var j=0;
     while (j<bts.length){
       bts[j].bounce(allusers.users[i].s);

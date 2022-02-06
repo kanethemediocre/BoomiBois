@@ -120,8 +120,14 @@ function update() { //game loop
       var i=0;
       while(i<updateplayerarray.length){
         var dt =(time-updatetime);
+        context.font = "12px Arial";
+        context.fillStyle = "white";
+        context.fillText(dt+" frames since contact",canvas.width-128,24);
         context.fillStyle = "red"; 
-        context.fillRect(500, 8, dt*32,8);//lag frame meter
+        if (dt<8){context.fillStyle = "orange"; }
+        if (dt<5){context.fillStyle = "yellow"; }
+        if (dt<3){context.fillStyle = "lime"; }
+        context.fillRect(canvas.width-128, 32, dt*8,8);//latency measurement in time since update.
         var px = updateplayerarray[i][0]+dt*updateplayerarray[i][2];//player vx
         var py = updateplayerarray[i][1]+dt*updateplayerarray[i][3];//player vy
         lastcoords = [px,py];
@@ -304,7 +310,7 @@ Your size is your score!  It's also represented by the colored bar at the top le
 <br>
 Also, don't get too close to the attractors/repulsors.  They are off by default.  
 <br>
-Player 0 can change level and attractor options with number keys.
+Player 0 can change level, attractor, and boundary options with number keys 1,2, and 3.
 <br>
 Hit 1 to cycle through level options, hit 2 to enable or disable attractors and repulsors. Up to 3 will be randomized on enable. 
 <br>

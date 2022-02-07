@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Boomi Bois v38 by Andrew Kane</title>
+    <title>Boomi Bois v39 by Andrew Kane</title>
     <style>
       body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 
@@ -34,6 +34,7 @@
     var updatebtsarray = [];
     var updateatsarray = [];
     var mycolor = "grey";
+    var serverrules = ["No","rules","received"];
     //var bonus = [-100,-100,0,0,0];//x,y,vx,vy,type
     class Keybutton{
       constructor(x,y,xsize,ysize,momentary,output){
@@ -49,7 +50,6 @@
         context.beginPath()
         context.rect(this.x,this.y,this.sx,this.sy);
         context.stroke();
-        console.log("itriedtodraw");
       }
       check(xx,yy){
         var theoutput = -1;
@@ -87,6 +87,9 @@
       //updateblingarray = freshxyc[3];
       updatetime = time;
     });
+    socket.on('rules', function(newrules) {
+      serverrules = newrules;
+    }); //io.to(theid).emit('rules', [currentlevel,currentattract,boundarymode]);
 //const FPS = 60;
 var canvas, context; 
 var lastcoords = [0,0];
@@ -229,7 +232,16 @@ function update() { //game loop
       mobilekeys[i].draw("blue");
       i++;
     }
-
+    //draw rules
+     context.fillStyle = "white";
+      context.font = "16px Arial";
+      context.fillText("Level "+serverrules[0],8,canvas.height-64);
+      var astate = "off"
+      if (serverrules[1]==1){astate="on";}
+      context.fillText("Attractors "+astate,8,canvas.height-44);
+      var bstate = "bounces";
+      if (serverrules[2]==1){bstate="wraps";}
+      context.fillText("Boundary "+bstate,8,canvas.height-24);
     //}
     //if(time%4==0){
     //  var truetime = Date.now();
@@ -238,7 +250,8 @@ function update() { //game loop
     //  if (servertime<truetime){update();}
     //}
     //requestAnimationFrame(update);
-    console.log(updateplayerarray[0][1]+dt*updateplayerarray[0][3]);//player y+vy*dt)
+    
+    //console.log(updateplayerarray[0][1]+dt*updateplayerarray[0][3]);//player y+vy*dt)
   }
 //update();
 document.addEventListener("mousedown", mouseDownHandler, false);
@@ -300,7 +313,7 @@ event.preventDefault();// Cancel the default action to avoid it being handled tw
 <br>
 With keyboard, tap (do not hold) arrow keys to move, hit spacebar to release or detonate bombs.  M key will hide mobile support keypad.
 <br>
-On mobile devices, the mobile support keypad is in the lower right.  The middle button is your spacebar (for bomb), the others are your arrow keys.
+On mobile devices, the keypad is marked in blue, the lower right corner.  The middle button is your spacebar (for bomb), the others are your arrow keys.
 <br>
 Hit the bling or your opponent with an explosion to score.
 <br>
@@ -311,8 +324,6 @@ Your size is your score!  It's also represented by the colored bar at the top le
 Also, don't get too close to the attractors/repulsors.  They are off by default.  
 <br>
 Player 0 can change level, attractor, and boundary options with number keys 1,2, and 3.
-<br>
-Hit 1 to cycle through level options, hit 2 to enable or disable attractors and repulsors. Up to 3 will be randomized on enable. 
 <br>
 Also try <a href="https://kanethemediocre.github.io/">Bling Hustle, </a>
   an open world space fantasy capitalism adventure.<br>

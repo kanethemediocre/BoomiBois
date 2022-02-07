@@ -302,6 +302,7 @@ io.on('connection', (socket) => { //Fresh connection and disconnection
     allusers.users.push(newuser);
     allusers.setcolor(randomplayercolor,theid);
     io.to(theid).emit('whoami', randomplayercolor);//tell client what color they are
+    io.to(theid).emit('rules', [currentlevel,currentattract,boundarymode]);
     var btsupdate = [];//Array to tell client where the bouncetangles are
     var i = 0;
     while(i<bts.length){
@@ -436,6 +437,7 @@ else {allusers.users[i].s.s=2;}
         j++;
       }    
       io.emit('levelbts', btsupdate);
+      io.emit('rules', [currentlevel,currentattract,boundarymode]);
       console.log("trytochangelevel");
     }else if ((allusers.users[i].input==12)&&(i==0)){//attractor change can be done by player 0.  Shouldn't really be in this loop but i was keeping all the player input here.
       //console.log("detected 2 press");
@@ -469,11 +471,12 @@ else {allusers.users[i].s.s=2;}
         j++;
       }    
       io.emit('levelats', atsupdate);
+      io.emit('rules', [currentlevel,currentattract,boundarymode]);
       console.log("trytochangelevelattractors"); 
     }else if ((allusers.users[i].input==13)&&(i==0)){
       boundarymode++;
       if (boundarymode>1){boundarymode = 0;}
-      //change boundary mode
+      io.emit('rules', [currentlevel,currentattract,boundarymode]);
     }else if (allusers.users[i].input==13){
       //change maxspeed
     }
@@ -550,7 +553,8 @@ else {allusers.users[i].s.s=2;}
     updatescorearray.push([allusers.users[i].score,allusers.users[i].s.c]);//score and color
     i++;
   }
-  bling.boundarybounce(xsize,ysize);//bling stuff only handled once, not for every player
+  if (boundarymode==0){ bling.boundarybounce(xsize,ysize); }
+  else if (boundarymode==1){ bling.boundarywrap(xsize,ysize); }
   bling.update1();
   if (time%(60*60)==0){bonus.randomize(xsize,ysize,1);}
   bonus.boundarybounce(xsize,ysize);

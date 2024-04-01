@@ -279,8 +279,8 @@ var ats = []; //ats contains all the attractors in use
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
-server.listen(3000,'192.168.4.60');//this is my local ip, yours may vary
-//server.listen(3000,'172.31.39.8');//this is my server ip, yours may vary--"private" ip goes here, but browse to "public" ip to play.
+server.listen(3000,'yourserveripgoeshere');//this is my local ip, yours may vary
+//Your local ip will probably start with 192.168
 io.on('connection', (socket) => { //Player input
   socket.on('gameinput', (input) => {
     var theid = socket.id;
